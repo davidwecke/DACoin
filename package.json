@@ -1,0 +1,16 @@
+{
+  "name": "davidandalexcoin",
+  "version": "1.0.0",
+  "description": "David and Alex's Coin",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "David Wecke",
+  "license": "ISC",
+  "dependencies": {
+    "crypto-js": "^4.0.0",
+    "elliptic": "^6.5.4"
+  }
+}

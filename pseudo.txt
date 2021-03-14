@@ -1,0 +1,87 @@
+Classes:
+
+Class Transaction(senderID, receiverID, amount, Type)
+Variables:
+    Sender
+    Receiver
+    TransactionType System, User, CA
+    Signature
+    Time and Date of Creation
+    Hash
+
+Functions:
+    getHash()
+    receiveSignature(Signature)
+    verifyTransaction(Key publicKey) {verify Signature}
+    
+User creates transaction -> Generate Hash -> Sign Hash with Private Key -> Verify that the Private Key matches the Public Key of the Sender
+
+Class Block():
+Variables:
+    List of Transactions
+    Hash of the previous Block
+    Nonce
+    Date and Time
+    Hash
+
+Functions:
+    Mine()/GenerateHash()
+    addTransaction(Transaction)
+
+
+Class Node
+Variables:
+    ReadyTransaction[]
+    PendingCATransactions[]
+
+Functions:
+    addTransaction()
+        Perform signature verification? Accept it : Reject it
+        Check TransactionType -> Move to Ready or PendingCATransactions
+    getReadyTransactions()
+        check pending transactions from CA and add to Ready
+        return ready transactions
+    removeTransactions()
+        // Remove Transactions that are potentially successfully added to the Blockchain
+    rejectTransaction() // Reject a pending transaction from the CA
+
+
+Class Blockchain
+Variables:
+    Blocks[]
+
+Functions:
+    addBlock(Block) 
+        Check Block.hash calculation
+        Send email to tx.Sender;
+        Call remove added transactions from Node
+
+Class Users
+Variables:
+    publicKey/userID
+
+Functions:
+    generateKeyPair()
+
+
+Class Central Authority
+Variables:
+
+Functions:
+    transactionRequest(User Sender, User Receiver, SenderInfo)
+    createNewUser(PublicKey, SSN)
+
+
+Class Wallet(PrivateKey)
+Variables:
+    privateKey
+    publicKey
+
+Functions:
+    generateTransaction(receiverID, amount) // Called by the user, Type=User
+    generateSignature(Hash)
+
+
+Class KeyGenerator
+Functions:
+    generateKeyPair()

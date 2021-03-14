@@ -1,0 +1,15 @@
+// Running under a few assumptions:
+// If CA becomes attacked, it can be reclaimed. 
+// If CA is attacked, it is known and rollback can be implemented. 
+
+// Account Creation
+David: { email@email.com, password, SSN } -> Central Authority -> OK, send me your public key -> User creates public private key pair -> CA, Creates a wallet -> Wallet Database kept by CA
+
+// Has ability to make transaction without password on any account. 
+Central Authority: 
+David:0, Alex: 5
+
+// Required mechanism for rollback. 
+
+Public Blockchain: 
+[0] -> [1] -> [2]{CA{Alex's Wallet} -> David: 5}
