@@ -26,12 +26,12 @@ Variables:
 
 Functions:
     Mine()/GenerateHash()
-    addTransaction(Transaction)
+    addTransaction(Node)
 
 
 Class Node
 Variables:
-    ReadyTransaction[]
+    ReadyTransactions[] // Ready transactions can be moved to the next block
     PendingCATransactions[]
 
 Functions:
@@ -41,9 +41,7 @@ Functions:
     getReadyTransactions()
         check pending transactions from CA and add to Ready
         return ready transactions
-    removeTransactions()
-        // Remove Transactions that are potentially successfully added to the Blockchain
-    rejectTransaction() // Reject a pending transaction from the CA
+    rejectTransaction() // Reject a pending transaction from the CA by the sender
 
 
 Class Blockchain
@@ -51,14 +49,16 @@ Variables:
     Blocks[]
 
 Functions:
+    getHeadHash()
     addBlock(Block) 
         Check Block.hash calculation
         Send email to tx.Sender;
-        Call remove added transactions from Node
 
 Class Users
 Variables:
-    publicKey/userID
+    Wallet
+    userID = publicKey
+    SSN/Identifying ID
 
 Functions:
     generateKeyPair()
@@ -66,22 +66,73 @@ Functions:
 
 Class Central Authority
 Variables:
+    List of Users and their SSN
 
 Functions:
-    transactionRequest(User Sender, User Receiver, SenderInfo)
-    createNewUser(PublicKey, SSN)
+    generateTransaction(User Sender, User Receiver, SenderInfo) // called by a User
+    registerNewUser(PublicKey, SSN) {Add(user to list of users)}
+
+    Sign(publicKey of User, CAPrivateKey) -> User  
 
 
 Class Wallet(PrivateKey)
 Variables:
     privateKey
-    publicKey
+    publicKey = userID
 
 Functions:
     generateTransaction(receiverID, amount) // Called by the user, Type=User
     generateSignature(Hash)
 
 
-Class KeyGenerator
-Functions:
-    generateKeyPair()
+
+Setup and test 
+/*
+------------------- Blockchain Setup -------------------
+*/
+
+DACoinNode = new Node
+DACoin = new Blockchain
+GenisisBlock = new Block[randomTransaction = new Transaction]
+
+GenisisBlock.mine()
+
+DACoin.addBlock(GenisisBlock)
+
+CA = new CA
+
+/*
+------------------- User Creation -------------------
+*/
+
+David = new User
+Alex = new User
+
+David.createWallet
+Alex.createWallet
+
+CA.registerUser(David)
+CA.registerUser(Alex)
+
+/*
+------------------- Transactions -------------------
+*/
+
+David.createTransaction(to:Alex, amount:50)
+    Node.addTrasaction(new Transaction)
+
+Alex.createTransaction(to:David, amount:20)
+    Node.addTrasaction(new Transaction)
+
+/*
+------------------- Mining -------------------
+*/
+block1 = new Block()
+block1.addTrasactionsFromNode()
+
+block1.calculateHash()
+
+if hashFound()  
+    DACoin.addBlock(block1)
+
+console.log(DACoin.verifyBlockchain())
