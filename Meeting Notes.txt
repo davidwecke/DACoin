@@ -1,0 +1,32 @@
+3/28/2021
+To-Do List
+    - Mining Reward
+    - Central Authority Class
+    - User Class
+        - Registered users 
+        - tracks email/id and SSN
+        - Has wallet associated with it
+    - Wallet Class/Structure
+        - Public Private Key Pair 
+        - Password ?(maybe)
+        - Can be created anonymously
+    - Optimize generate hash function by not storing the hash value
+    - Alter method of rejection
+
+What we did:
+    - Verified all current classes work
+    - Discussed implementation model of CA
+    - Discussed general implementation(Wallet, keys, etc.)
+
+Descisions Made:
+    - CA registration is optional
+    - CA will keep track of username and SSN 
+    - Rejection of CA transaction using SSN or private key 
+
+Next Meeting: 
+    - Implement wallet structure
+    - Implement new CA first
+    - Implement new rejection
+    - Test rejection
+
+Next Meeting on weekday: Wednesday 1-4 PM, 03/31/2021
