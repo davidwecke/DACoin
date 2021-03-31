@@ -30,3 +30,37 @@ Next Meeting:
     - Test rejection
 
 Next Meeting on weekday: Wednesday 1-4 PM, 03/31/2021
+
+
+3/31/2021
+To-do List:
+    - Wallet Structure
+    - Basic User class structure
+    - New CA
+    - New Rejection Method within queue
+    - Test new rejection
+    - Optimize generate hash function by not storing the hash value
+    - Mining Reward
+   
+
+What we did:
+    - Discussed a 'lost coin' distribution via mining Reward
+        - Discussed 2 potential options: Distribution and Mining Reward Addition
+    - Completed Wallet Structure
+    - Completed Basic User Class Structure
+    - Implemented CA
+    - Tested the transactions
+    - Created new rejection method and tested it
+
+Descisions Made:
+    - Decided to keep CA
+
+Next Meeting: 
+    - getAvailableCoins function, maybe in blockchain 
+    - CA Public key in text file
+    - CA has access to node at creation
+    - Mining Reward
+    - Consolidate and clean up Code
+    - Generate test code
+
+Next Meeting on Weekend: Sunday 1-4 PM, 04/04/2021

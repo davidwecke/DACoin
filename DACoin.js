@@ -2,7 +2,7 @@ var EC = require('elliptic').ec;
 const SHA256 = require('crypto-js/sha256');
 const blake3 = require('blake3');
 const ec = new EC('secp256k1'); 
-const CAKey = '';
+var CAKey = '';
 
 const txType = {
     USER: 0,
@@ -35,32 +35,29 @@ class Transaction {
     }
 
     verifyTransaction() {
-        publicKey = ec.keyFromPublic(this.senderID, 'hex');
+        var publicKey = ec.keyFromPublic(this.senderID, 'hex');
         return publicKey.verify(this.calculateHash(), this.signature);
     }
 
     verifyCA() {
-        publicKey = ec.keyFromPublic(CAKey, 'hex');
+        var publicKey = ec.keyFromPublic(CAKey, 'hex');
         return publicKey.verify(this.calculateHash(), this.signature);
     }
 
 }
 
 class Block{
-    constructor(previousHash, difficulty){
+    constructor(previousHash){
         this.previousHash = previousHash;
         this.transactionList = [];
         this.nonce = 0;
         this.date = Date.now();
-        this.difficulty = difficulty;
+        this.difficulty = 5;
         this.hash = '';
     }
 
     addTrasactionsFromNode(node){
-        this.transactionList.add(node.getReadyTransactions());
-        while(node.length != 0) {
-            this.transactionList.add(node.readyTransaction.pop());
-        }
+        this.transactionList = node.getReadyTransactions();
     }
 
     calculateHash(){
@@ -110,13 +107,18 @@ class Node{
         if(transaction.verifyCA()) {
             // Verified CA Transaction
             this.pendingCATransactions.push(transaction);
+            console.log('Transaction successfully verified as CA Transaction! ');
         }
         else if(transaction.verifyTransaction()) {
             // Transaction is either USER or SYSTEM, same procedure either way: Add to ready
             this.readyTransactions.push(transaction);
+            console.log('Transaction successfully verified! ');
         }
         else{
             // The transaction hash did not verify
+
+            console.log('Transaction failed to verify signature: ');
+            
 
             // Discard transaction
         }
@@ -129,19 +131,24 @@ class Node{
                 // We have waited long enough, add tx to ready queue
                 this.readyTransactions.push(array.splice(index, 1)[0]);
             }
-        })
+        }, this);
 
         // Return the ready transactions, and clear the array
         return this.readyTransactions.splice(0,this.readyTransactions.length);
     }
 
-    rejectTransaction(senderID) {
-        this.pendingCATransactions.forEach(function(value, index, array) {
-            if(value.senderID === senderID) {
-                // Remove any matching transactions
-                array.splice(index, 1);
-            }
-        })
+    rejectTransaction(senderID, privateKey) {
+        var key = ex.keyFromPrivate(privateKey);
+        const publicKey = key.getPublic();
+        if(publicKey === CAKey || publicKey === senderID) {
+            // Find all transaction for that user
+            this.pendingCATransactions.forEach(function(value, index, array) {
+                if(value.senderID === senderID) {
+                    // Remove any matching transactions
+                    array.splice(index, 1);
+                }
+            })
+        }
     }
 }
 
@@ -192,14 +199,79 @@ class Blockchain {
     }
 }
 
+class Wallet {
+    constructor() {
+        this.key = ec.genKeyPair();
+        this.publicKey = this.key.getPublic('hex');
+        this.privateKey = this.key.getPrivate('hex');
+    }
+
+    sign(hash) {
+        const sig = this.key.sign(hash);
+        return sig.toDER('hex');
+    }
+
+    getTransactionHistory() { 
+        // Traverse Blockchain
+
+        // Output current coins
+
+        // store temp variable JSON {timestamp, block, fundsAtTime}
+    }
+
+    createTransaction(receiverID, amount, node) {
+        var transaction = new Transaction(this.publicKey, receiverID, amount);
+        var sig = this.sign(transaction.getHash());
+        transaction.receiveSignature(sig);
+        node.addTrasaction(transaction);
+    }
+}
+
+class User {
+    constructor() {
+        this.wallet = new Wallet();
+        this.userID = this.wallet.publicKey;
+    }
+}
+
 class CentralAuthority {
     constructor() {
         this.key = ec.genKeyPair();
-        this.publicKey = key.getPublic('hex');
-        this.privateKey = key.getPrivate('hex');
+        this.publicKey = this.key.getPublic('hex');
+        this.privateKey = this.key.getPrivate('hex');
+        CAKey = this.publicKey;
+        this.registeredUsers = [];
     }
 
-    //createTr
+    registerUser(userID, userSSN) {
+        const userObj = {userID, userSSN};
+        this.registeredUsers.push(userObj);
+    }
+
+    createTransaction(userID, userSSN, receiverID, node) {
+        if(this.registeredUsers.find( function findUser(userObj) {
+            return userObj.userID === userID && userObj.userSSN === userSSN;
+        })) {
+            // Create transaction on their behalf
+            // Missing a getAvailableCoins functionality
+            var transaction = new Transaction(userID, receiverID, 1);
+            var sig = this.key.sign(transaction.getHash());
+            var sigHex = sig.toDER('hex');
+            transaction.receiveSignature(sigHex);
+            node.addTrasaction(transaction);
+        } else {
+            console.log('User was not verified by CA');
+        }
+    }
+
+    rejectTransaction(userID, userSSN) {
+        if(this.registeredUsers.find( function findUser(userObj) {
+            return userObj.userID === userID && userObj.userSSN === userSSN;
+        })) {
+            // Reject Transaction
+            node.rejectTransaction(userID, this.privateKey);
+        }
+    }
 }
 
 // Gen keypair/ make wallet -> send public key to the CA -> CA signs it
@@ -211,54 +283,61 @@ class CentralAuthority {
 console.log(new Date(Date.now()));
 
 DACoin = new Blockchain();
-
-node = new Node();
+DACoinNode = new Node();
 
 console.log(new Date(DACoin.getHead().date));
 
-// Make 3 wallets!
-const davidsKey = ec.genKeyPair();
-const davidsPubKey = davidsKey.getPublic('hex');
-const davidsPrivKey = davidsKey.getPrivate('hex');
-
-const alexsKey = ec.genKeyPair();
-const alexsPubKey = alexsKey.getPublic('hex');
-const alexsPrivKey = alexsKey.getPrivate('hex');
+DACoinCA = new CentralAuthority();
+CAKey = DACoinCA.publicKey;
 
 
-tx0 = new Transaction('david', 'alex', 5);
-tx0Hash = tx0.getHash();
-const sig = davidsKey.sign(tx0Hash);
-tx0.receiveSignature(sig.toDER('hex'));
+/* 
+-------------------- Testing User End --------------------
+*/
 
-node.addTrasaction(tx0);
+david = new User();
+alex = new User();
 
-var block1 = new Block(DACoin.getHeadHash(), 5);
+david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode);
+alex.wallet.createTransaction(david.wallet.publicKey, 5, DACoinNode);
 
-block1.transactionList.push(block1);
+var bogusTransaction = new Transaction(alex.wallet.publicKey, david.wallet.publicKey, 100);
+var sig = alex.wallet.sign(bogusTransaction.getHash());
+bogusTransaction.receiveSignature(sig);
+DACoinNode.addTrasaction(bogusTransaction);
 
+console.log('Davids public key ' + david.wallet.publicKey);
+console.log('Alexs public key ' + alex.wallet.publicKey);
+
+/* 
+-------------------- Testing Miner End --------------------
+*/
+
+var block1 = new Block(DACoin.getHeadHash());
+block1.addTrasactionsFromNode(DACoinNode);
 block1.generateHash();
-
 DACoin.addBlock(block1);
 
-var verifyString = DACoin.verify() ? 'Blockchain is valid' : 'Blockchain is NOT valid';
+/* 
+-------------------- Testing CA --------------------
+*/
+DACoinCA.registerUser(david.userID, '123-55-6666');
+DACoinCA.createTransaction(david.userID, '123-55-6666', alex.userID, DACoinNode);
 
-console.log(verifyString);
+//console.log('Node ready transactions: ' + DACoinNode.readyTransactions);
+console.log('Pending CA Transactions: ' + DACoinNode.pendingCATransactions);
 
-tx1 = new Transaction('alex', 'david', 10);
-tx1Hash = tx1.getHash();
+var block2 = new Block(DACoin.getHeadHash());
+block2.addTrasactionsFromNode(DACoinNode);
+console.log('Block 2 Transactions BEFORE waiting 4000ms: ' + block2.transactionList);
 
-const sig1 = alexsKey.sign(tx1Hash);
-tx1.receiveSignature(sig1.toDER('hex'));
+setTimeout(function() {
+    block2.addTrasactionsFromNode(DACoinNode);
+    console.log('Block 2 Transactions AFER waiting 4000ms: ' + block2.transactionList);
+    block2.generateHash();
+    DACoin.addBlock(block2);
 
-var block2 = new Block(DACoin.getHeadHash(), 5);
+    console.log(DACoin);
+}, 4000);
 
-block2.transactionList.push(block1);
 
-block2.generateHash();
-
-DACoin.addBlock(block2);
-
-verifyString = DACoin.verify() ? 'Blockchain is valid' : 'Blockchain is NOT valid';
-
-console.log(verifyString);
