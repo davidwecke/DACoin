@@ -65,7 +65,35 @@ class Block{
         return blake3.hash(hashString).toString('hex');
     }
 
-    generateHash(){
+    mineBlock(rewardAddress, blockchain){
+        var map = new Map();
+        // Map all user transactions for this block
+        this.transactionList.forEach(function(transaction, index, array) {
+            if(map.has(transaction.senderID)) {
+                map.set(transaction.senderID, transaction.amount + map.get(transaction.senderID));
+            } else {
+                map.set(transaction.senderID, transaction.amount);
+            }
+            
+        }, this);
+
+        
+        // Remove any transactions from a user with insufficient funds
+        map.forEach(function(amount, sender, array) {
+            console.log(amount);
+            if(blockchain.getAvailableCoins(sender) < amount) {
+                this.transactionList.forEach(function(transaction, index, array){
+                    if (transaction.senderID === sender) {
+                        array.slice(index, 1);
+                    }
+                }, this);
+            }
+        }, this);
+
+        // Add Mining reward transaction
+        this.transactionList.push(new Transaction('System Mining Reward', rewardAddress, blockchain.miningReward));
+        
+        // Mine hash
         do {
             this.nonce++;
             this.hash = this.calculateHash();
@@ -155,15 +183,30 @@ class Node{
 class Blockchain {
     constructor() {
         this.blockchain = [];
+        this.miningReward = 100;
         // Create genesis block
         this.createGenesisBlock();
+    }
+
+    getAvailableCoins(publicAddress) {
+        var funds = 0.0;
+        this.blockchain.forEach(function(block, index, blockchain){
+            block.transactionList.forEach(function(transaction, index, transactionList){
+                if(transaction.receiverID === publicAddress) {
+                    funds += transaction.amount;
+                } else if(transaction.senderID === publicAddress) {
+                    funds -= transaction.amount;
+                }
+            }, this);
+        }, this);
+        return funds;
     }
 
     createGenesisBlock() {
         var genesisBlock = new Block('Genesis Block, no previous hash.', 5);
         var genesisTransaction = new Transaction('david', 'alex', 0);
         genesisBlock.transactionList.push(genesisTransaction);
-        genesisBlock.generateHash(); // Mine the block
+        genesisBlock.mineBlock('04c5861ec663323819981cccd7be76a4c3c494f55f9d2bf24d4cb562bef33837df8f59dd3f6626d4c485adfcfb3e09de91b3e66794af69587fc810ace7904d04f9', this); // Mine the block
         this.blockchain.push(genesisBlock);
     }
 
@@ -180,12 +223,19 @@ class Blockchain {
     }
 
     // Add a block to the blockchain
-    addBlock(block) {
+    addBlock(block, miningRewardAddress) {
         // Pass the verify function the blockchain
         if (block.verify(this.getHeadHash())) {
             // Valid block, add it
             console.log('Successfully added a block!');
             this.blockchain.push(block);
+            this.checkMiningReward();
+        }
+    }
+
+    checkMiningReward() {
+        if(this.blockchain.length % 2 === 0) {
+            this.miningReward = this.miningReward/2;
         }
     }
 
@@ -298,13 +348,15 @@ CAKey = DACoinCA.publicKey;
 david = new User();
 alex = new User();
 
-david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode);
 alex.wallet.createTransaction(david.wallet.publicKey, 5, DACoinNode);
+david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode);
 
+/*
 var bogusTransaction = new Transaction(alex.wallet.publicKey, david.wallet.publicKey, 100);
 var sig = alex.wallet.sign(bogusTransaction.getHash());
 bogusTransaction.receiveSignature(sig);
 DACoinNode.addTrasaction(bogusTransaction);
+*/
 
 console.log('Davids public key ' + david.wallet.publicKey);
 console.log('Alexs public key ' + alex.wallet.publicKey);
@@ -315,7 +367,8 @@ console.log('Alexs public key ' + alex.wallet.publicKey);
 
 var block1 = new Block(DACoin.getHeadHash());
 block1.addTrasactionsFromNode(DACoinNode);
-block1.generateHash();
+block1.mineBlock(david.wallet.publicKey, DACoin);
+console.log('Transaction list block 1 : ' + block1.transactionList);
 DACoin.addBlock(block1);
 
 /* 
@@ -334,10 +387,13 @@ console.log('Block 2 Transactions BEFORE waiting 4000ms: ' + block2.transactionL
 setTimeout(function() {
     block2.addTrasactionsFromNode(DACoinNode);
     console.log('Block 2 Transactions AFER waiting 4000ms: ' + block2.transactionList);
-    block2.generateHash();
+    block2.mineBlock(david.wallet.publicKey, DACoin);
     DACoin.addBlock(block2);
 
     console.log(DACoin);
+
+    console.log('Alexs Coins: ' + DACoin.getAvailableCoins(alex.wallet.publicKey));
+    console.log('Davids Coins: ' + DACoin.getAvailableCoins(david.wallet.publicKey));
 }, 4000);
 
 

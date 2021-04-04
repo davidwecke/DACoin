@@ -64,3 +64,29 @@ Next Meeting:
     - Generate test code
 
 Next Meeting on Weekend: Sunday 1-4 PM, 04/04/2021
+
+04/04/2021
+To-Do List:
+    - Mining Reward
+    - getAvailableCoins function
+    - CA access to node
+    - CA public key public text file
+    - Consolidate and clean up Code
+    - Generate test code
+
+
+What we did:
+    - Added mining Reward
+    - Added a get coins function
+    - Verified that both work
+    - Added NOT working reject insufficient funds function
+
+Next Meeting:
+    - Fix CA Sending Functionality, currently sends 1 coin
+    - Fix reject for invalid funds
+    - CA access to node
+    - CA public key public text file
+    - Consolidate and clean up Code
+    - Generate test code
+
+Next Meeting 07/04/2021 1pm-4pm
