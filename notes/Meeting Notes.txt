@@ -90,3 +90,27 @@ Next Meeting:
     - Generate test code
 
 Next Meeting 07/04/2021 1pm-4pm
+
+07/04/2021
+To-Do List:
+    - Fix/create funds rejection
+    - Split into class files
+    - CA Sending Functionality for all coins
+
+What we did:
+    - Reference of Node in the blockchain
+    - Split/Organized files into seperate files
+    - Fixed the rejection method for funds per block
+    - Fixed the getFunds method
+    - Reject <=0 transactions on Node
+    - Tested Reject Method with many transactions
+    - Good progress
+
+Next Meeting:
+    - Genesis block reward goes to right address
+        - Maybe store a local wallet for us both
+    - CA Sending Functionality for all coins
+    - CA local file for public key
+        - Stored on blockchain/intrinsic to the system
+    
+Next meeting on 11/04/2021 on Sunday at 1pm

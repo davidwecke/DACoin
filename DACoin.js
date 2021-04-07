@@ -56,8 +56,9 @@ class Block{
         this.hash = '';
     }
 
-    addTrasactionsFromNode(node){
-        this.transactionList = node.getReadyTransactions();
+    addTransactionsFromNode(node){
+        let tempArray = [].concat(this.transactionList, node.getReadyTransactions());
+        this.transactionList = tempArray;
     }
 
     calculateHash(){
@@ -66,30 +67,6 @@ class Block{
     }
 
     mineBlock(rewardAddress, blockchain){
-        var map = new Map();
-        // Map all user transactions for this block
-        this.transactionList.forEach(function(transaction, index, array) {
-            if(map.has(transaction.senderID)) {
-                map.set(transaction.senderID, transaction.amount + map.get(transaction.senderID));
-            } else {
-                map.set(transaction.senderID, transaction.amount);
-            }
-            
-        }, this);
-
-        
-        // Remove any transactions from a user with insufficient funds
-        map.forEach(function(amount, sender, array) {
-            console.log(amount);
-            if(blockchain.getAvailableCoins(sender) < amount) {
-                this.transactionList.forEach(function(transaction, index, array){
-                    if (transaction.senderID === sender) {
-                        array.slice(index, 1);
-                    }
-                }, this);
-            }
-        }, this);
-
         // Add Mining reward transaction
         this.transactionList.push(new Transaction('System Mining Reward', rewardAddress, blockchain.miningReward));
         
@@ -120,18 +97,17 @@ class Block{
             // Valid Block!
             return true;
         }
-    }
-
-    
+    }  
 }
 
 class Node{
     constructor(){
+        //this.blockchain = pointerToBlockchain;
         this.readyTransactions = [];
         this.pendingCATransactions = [];
     }
 
-    addTrasaction(transaction) {
+    addTransaction(transaction, blockchain) {
         if(transaction.verifyCA()) {
             // Verified CA Transaction
             this.pendingCATransactions.push(transaction);
@@ -139,8 +115,16 @@ class Node{
         }
         else if(transaction.verifyTransaction()) {
             // Transaction is either USER or SYSTEM, same procedure either way: Add to ready
-            this.readyTransactions.push(transaction);
-            console.log('Transaction successfully verified! ');
+            // Check if user has enough funds for this transaction
+            const userCurrentFunds = blockchain.getAvailableCoins(transaction.senderID);
+            if(userCurrentFunds < transaction.amount || transaction.amount <= 0) {
+                // Throw out transaction
+                console.log("threw out transaction of amount: " + transaction.amount + ' and sender id: ' + transaction.senderID);
+            } else {
+                this.readyTransactions.push(transaction);
+            console.log('Transaction successfully verified and added to the Node!');
+            }
+            
         }
         else{
             // The transaction hash did not verify
@@ -269,11 +253,11 @@ class Wallet {
         // store temp variable JSON {timestamp, block, fundsAtTime}
     }
 
-    createTransaction(receiverID, amount, node) {
+    createTransaction(receiverID, amount, node, blockchain) {
         var transaction = new Transaction(this.publicKey, receiverID, amount);
         var sig = this.sign(transaction.getHash());
         transaction.receiveSignature(sig);
-        node.addTrasaction(transaction);
+        node.addTransaction(transaction, blockchain);
     }
 }
 
@@ -298,17 +282,17 @@ class CentralAuthority {
         this.registeredUsers.push(userObj);
     }
 
-    createTransaction(userID, userSSN, receiverID, node) {
+    createTransaction(userID, userSSN, receiverID, node, blockchain) {
         if(this.registeredUsers.find( function findUser(userObj) {
             return userObj.userID === userID && userObj.userSSN === userSSN;
         })) {
             // Create transaction on their behalf
             // Missing a getAvailableCoins functionality
-            var transaction = new Transaction(userID, receiverID, 1);
+            var transaction = new Transaction(userID, receiverID, blockchain.getAvailableCoins(userID));
             var sig = this.key.sign(transaction.getHash());
             var sigHex = sig.toDER('hex');
             transaction.receiveSignature(sigHex);
-            node.addTrasaction(transaction);
+            node.addTransaction(transaction, blockchain);
         } else {
             console.log('User was not verified by CA');
         }
@@ -348,14 +332,14 @@ CAKey = DACoinCA.publicKey;
 david = new User();
 alex = new User();
 
-alex.wallet.createTransaction(david.wallet.publicKey, 5, DACoinNode);
-david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode);
+alex.wallet.createTransaction(david.wallet.publicKey, 5, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode, DACoin);
 
 /*
 var bogusTransaction = new Transaction(alex.wallet.publicKey, david.wallet.publicKey, 100);
 var sig = alex.wallet.sign(bogusTransaction.getHash());
 bogusTransaction.receiveSignature(sig);
-DACoinNode.addTrasaction(bogusTransaction);
+DACoinNode.addTransaction(bogusTransaction);
 */
 
 console.log('Davids public key ' + david.wallet.publicKey);
@@ -366,26 +350,39 @@ console.log('Alexs public key ' + alex.wallet.publicKey);
 */
 
 var block1 = new Block(DACoin.getHeadHash());
-block1.addTrasactionsFromNode(DACoinNode);
+block1.addTransactionsFromNode(DACoinNode);
 block1.mineBlock(david.wallet.publicKey, DACoin);
 console.log('Transaction list block 1 : ' + block1.transactionList);
 DACoin.addBlock(block1);
 
 /* 
+-------------------- Testing Sending after mining --------------------
+*/
+
+david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+
+/* 
 -------------------- Testing CA --------------------
 */
 DACoinCA.registerUser(david.userID, '123-55-6666');
-DACoinCA.createTransaction(david.userID, '123-55-6666', alex.userID, DACoinNode);
+DACoinCA.createTransaction(david.userID, '123-55-6666', alex.userID, DACoinNode, DACoin);
 
 //console.log('Node ready transactions: ' + DACoinNode.readyTransactions);
 console.log('Pending CA Transactions: ' + DACoinNode.pendingCATransactions);
 
 var block2 = new Block(DACoin.getHeadHash());
-block2.addTrasactionsFromNode(DACoinNode);
+block2.addTransactionsFromNode(DACoinNode);
 console.log('Block 2 Transactions BEFORE waiting 4000ms: ' + block2.transactionList);
 
 setTimeout(function() {
-    block2.addTrasactionsFromNode(DACoinNode);
+    block2.addTransactionsFromNode(DACoinNode);
     console.log('Block 2 Transactions AFER waiting 4000ms: ' + block2.transactionList);
     block2.mineBlock(david.wallet.publicKey, DACoin);
     DACoin.addBlock(block2);
