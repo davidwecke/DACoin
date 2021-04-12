@@ -1,8 +1,9 @@
+var EC = require('elliptic').ec;
+const ec = new EC('secp256k1'); 
 const Block = require("./Block");
 
 class Node{
-    constructor(blockchain){
-        this.blockchainRef = blockchain;
+    constructor(){
         this.readyTransactions = [];
         this.pendingCATransactions = [];
     }
@@ -11,16 +12,16 @@ class Node{
         if(transaction.verifyCA()) {
             // Verified CA Transaction
             this.pendingCATransactions.push(transaction);
-            console.log('Transaction successfully verified as CA Transaction! ');
+            //console.log('Transaction successfully verified as CA Transaction! ');
         }
         else if(transaction.verifyTransaction()) {
             // Transaction is either USER or SYSTEM, same procedure either way: Add to ready
             if(transaction.amount <= 0) {
                 // Throw out transaction
-                console.log("threw out transaction of amount: " + transaction.amount + ' and sender id: ' + transaction.senderID);
+                //console.log("threw out transaction of amount: " + transaction.amount + ' and sender id: ' + transaction.senderID);
             } else {
                 this.readyTransactions.push(transaction);
-            console.log('Transaction successfully verified and added to the Node!');
+                //console.log('Transaction successfully verified and added to the Node!');
             }
             
         }
@@ -36,10 +37,12 @@ class Node{
 
     getReadyTransactions() {
         // Check if any pending transactions are ready
-        this.pendingCATransactions.forEach(function(value, index, array) {
+        let tempCaPendingTransactions = [].concat(this.pendingCATransactions);
+        tempCaPendingTransactions.forEach(function(value, index, array) {
             if(value.date + value.timeWait <= Date.now() ) {
                 // We have waited long enough, add tx to ready queue
-                this.readyTransactions.push(array.splice(index, 1)[0]);
+                this.readyTransactions.push(value);
+                this.pendingCATransactions.splice(this.pendingCATransactions.indexOf(value), 1);
             }
         }, this);
 
@@ -48,8 +51,8 @@ class Node{
     }
 
     rejectTransaction(senderID, privateKey) {
-        var key = ex.keyFromPrivate(privateKey);
-        const publicKey = key.getPublic();
+        var key = ec.keyFromPrivate(privateKey);
+        const publicKey = key.getPublic('hex');
         if(publicKey === CAKey || publicKey === senderID) {
             // Find all transaction for that user
             this.pendingCATransactions.forEach(function(value, index, array) {

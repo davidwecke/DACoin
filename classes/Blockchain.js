@@ -2,11 +2,11 @@ const Block = require('./Block');
 const Transaction = require('./Transaction');
 
 class Blockchain {
-    constructor() {
+    constructor(creatorAddress) {
         this.blockchain = [];
         this.miningReward = 100;
         // Create genesis block
-        this.createGenesisBlock();
+        this.createGenesisBlock(creatorAddress);
     }
 
     getAvailableCoins(publicAddress) {
@@ -15,7 +15,8 @@ class Blockchain {
             block.transactionList.forEach(function(transaction, index, transactionList){
                 if(transaction.receiverID === publicAddress) {
                     funds += transaction.amount;
-                } else if(transaction.senderID === publicAddress) {
+                }
+                if(transaction.senderID === publicAddress) {
                     funds -= transaction.amount;
                 }
             }, this);
@@ -23,11 +24,11 @@ class Blockchain {
         return funds;
     }
 
-    createGenesisBlock() {
+    createGenesisBlock(creatorAddress) {
         var genesisBlock = new Block('Genesis Block, no previous hash.', 5);
         var genesisTransaction = new Transaction('david', 'alex', 0);
         genesisBlock.transactionList.push(genesisTransaction);
-        genesisBlock.mineBlock('04c5861ec663323819981cccd7be76a4c3c494f55f9d2bf24d4cb562bef33837df8f59dd3f6626d4c485adfcfb3e09de91b3e66794af69587fc810ace7904d04f9', this); // Mine the block
+        genesisBlock.mineBlock(creatorAddress, this); // Mine the block
         this.blockchain.push(genesisBlock);
     }
 
@@ -61,8 +62,8 @@ class Blockchain {
     }
 
     verify() {
-        for(var i = 1; i < this.blockchain.length; i++) {
-            if(!this.blockchain[i].verify(this.blockchain[i-1].calculateHash())) {
+        for(let i = 0; i < this.blockchain.length; i++) {
+            if(!this.blockchain[i].verify()){
                 return false;
             }
         }

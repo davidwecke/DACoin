@@ -30,7 +30,7 @@ class Block{
         let tally = new Map();
         
         this.tempTransactionList.forEach(function(transaction, index, array){
-            if(transaction.verifyTransaction()) {
+            if(transaction.verifyTransaction() || transaction.verifyCA()) {
                 if(tally.has(transaction.senderID)) {
                     // This is not a users first transaction
                     if(tally.get(transaction.senderID) < transaction.amount) {
@@ -54,6 +54,7 @@ class Block{
                 }
             } else {
                 // Transction not verified. Throw it out. 
+                console.log('Transaction: ' + transaction + ' was thrown out for not being verified!');
             }
         }, this);
 
@@ -74,12 +75,11 @@ class Block{
         return this.previousHash + ' ' + this.transactionList.length + ' ' + this.date + ' ' + this.nonce;
     }
 
-    verify(previousHash) {
-        if (this.previousHash !== previousHash) {
-            // Invalid previous hash!
-            console.log('Invalid previous hash found!');
-            return false;
-        } else if(this.hash !== this.calculateHash()){
+    verify() {
+        console.log('This.hash: ' + this.hash);
+        console.log('This.calculateHash: ' + this.calculateHash()) ;
+
+        if(this.hash !== this.calculateHash()){
             // Wrong hash calculated found
             console.log('Wrong calculated hash found!');
             return false;

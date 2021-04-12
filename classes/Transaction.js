@@ -32,8 +32,14 @@ class Transaction {
     }
 
     verifyCA() {
+        //console.log('CAKey: ' + CAKey);
         var publicKey = ec.keyFromPublic(CAKey, 'hex');
         return publicKey.verify(this.calculateHash(), this.signature);
+    }
+
+    toString() {
+        let transactionString = 'Transaction from ' + this.senderID + ' to ' + this.receiverID + ' for amount of ' + this.amount + ' created at time ' + this.date + ' with nonce of ' + this.nonce;
+        return transactionString;
     }
 
 }

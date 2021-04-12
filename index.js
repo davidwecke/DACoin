@@ -8,9 +8,12 @@ const User = require('./classes/User');
 /* 
 -------------------- Testing Code --------------------
 */
+david = new User();
+alex = new User();
 
-DACoin = new Blockchain();
-DACoinNode = new Node(DACoin);
+
+DACoin = new Blockchain(david.wallet.publicKey);
+DACoinNode = new Node();
 
 DACoinCA = new CentralAuthority();
 CAKey = DACoinCA.publicKey;
@@ -20,11 +23,16 @@ CAKey = DACoinCA.publicKey;
 -------------------- Testing User End --------------------
 */
 
-david = new User();
-alex = new User();
 
-alex.wallet.createTransaction(david.wallet.publicKey, 5, DACoinNode, DACoin);
 david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 60, DACoinNode, DACoin);
+david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode, DACoin);
+alex.wallet.createTransaction(david.wallet.publicKey, 5, DACoinNode, DACoin);
+
 
 /*
 var bogusTransaction = new Transaction(alex.wallet.publicKey, david.wallet.publicKey, 100);
@@ -50,6 +58,8 @@ DACoin.addBlock(block1);
 -------------------- Testing Sending after mining --------------------
 */
 
+/*
+Testing Transactions
 david.wallet.createTransaction(alex.wallet.publicKey, 50, DACoinNode, DACoin);
 david.wallet.createTransaction(alex.wallet.publicKey, 90, DACoinNode, DACoin);
 david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
@@ -58,30 +68,48 @@ david.wallet.createTransaction(alex.wallet.publicKey, -100, DACoinNode, DACoin);
 david.wallet.createTransaction(alex.wallet.publicKey, -1, DACoinNode, DACoin);
 david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
 david.wallet.createTransaction(alex.wallet.publicKey, 100, DACoinNode, DACoin);
+*/
 
 /* 
 -------------------- Testing CA --------------------
 */
 DACoinCA.registerUser(david.userID, '123-55-6666');
-DACoinCA.createTransaction(david.userID, '123-55-6666', alex.userID, DACoinNode, DACoin);
+DACoinCA.requestTransfer(david.userID, '123-55-6666', alex.userID);
+DACoinCA.requestTransfer(david.userID, '123-55-6666', alex.userID);
 
 //console.log('Node ready transactions: ' + DACoinNode.readyTransactions);
-console.log('Pending CA Transactions: ' + DACoinNode.pendingCATransactions);
+//console.log('Pending CA Transactions: ' + DACoinNode.pendingCATransactions);
 
 var block2 = new Block(DACoin.getHeadHash());
 block2.addTransactionsFromNode(DACoinNode);
-console.log('Block 2 Transactions BEFORE waiting 4000ms: ' + block2.transactionList);
+//console.log('Block 2 Temp Transactions BEFORE waiting 4000ms: ' + block2.tempTransactionList);
+
+/* 
+-------------------- CA Transaction is still rejectable --------------------
+*/
+
+//DACoinCA.rejectTransaction(david.wallet.publicKey, '123-55-6666');
+
 
 setTimeout(function() {
     block2.addTransactionsFromNode(DACoinNode);
-    console.log('Block 2 Transactions AFER waiting 4000ms: ' + block2.transactionList);
+    //console.log('Pending CA Transactions AFER waiting 4000ms: ');
+    //console.log(DACoinNode.pendingCATransactions);
+    //console.log('Block 2 Temp Transactions AFER waiting 4000ms: ');
+    //console.log(block2.tempTransactionList);
     block2.mineBlock(david.wallet.publicKey, DACoin);
     DACoin.addBlock(block2);
 
     console.log(DACoin);
 
+    // Make CA Transaction only transfer 1 coin
+    DACoin.blockchain[1].transactionList[0].amount = 100000;
+
     console.log('Alexs Coins: ' + DACoin.getAvailableCoins(alex.wallet.publicKey));
     console.log('Davids Coins: ' + DACoin.getAvailableCoins(david.wallet.publicKey));
-}, 4000);
+
+    let blockchainValid = DACoin.verify() ? 'Yes! The DACoin chain is valid!' : 'No, the DACoin chain is not valid.';
+    console.log('Is the blockchain valid? ' +  blockchainValid);
+}, 3000);
 
 

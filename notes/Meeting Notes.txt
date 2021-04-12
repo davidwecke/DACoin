@@ -98,7 +98,7 @@ To-Do List:
     - CA Sending Functionality for all coins
 
 What we did:
-    - Reference of Node in the blockchain
+    - Reference of blockchain in node
     - Split/Organized files into seperate files
     - Fixed the rejection method for funds per block
     - Fixed the getFunds method
@@ -114,3 +114,29 @@ Next Meeting:
         - Stored on blockchain/intrinsic to the system
     
 Next meeting on 11/04/2021 on Sunday at 1pm
+
+12/04/2021, Monday(Sunday was skipped due to David feeling unwell)
+To-do List:
+    - Create new wallet when lost wallet
+    - CA Key global
+    - Reject Transaction Signature Handoff between Node and CA
+
+What we did:
+    - CAKey is a global variable
+    - Blockchain and Node are also global variables
+    - Discussed spending coins you don't have yet in a block
+        e.g David has 10 coins and Alex has 0 Coins.
+        David sends Alex 10 Coins and Alex sends David 5 coins.
+        Alex's transaction will get denied because David's 
+        transaction is not yet on the blockchain.
+    - CA Sends ALL coins in ones wallet now
+    - Added CA change wallet associated with SSN function
+    - Fixed getAvailableCoins function to allow you to send yourself money 
+      without crashing the economy(it will count + and - for money sent to yourself)
+    - Fixed the adding of pending CA transactions to the ready transactions
+    - Updated the Blockchain.verify() function to properly detect tampering
+
+Next Meeting 
+    - Prettify output for screenshots
+    - Generate sufficiently large test case for screenshots
+    - Cleanup code for submission
