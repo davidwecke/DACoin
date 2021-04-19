@@ -2,6 +2,20 @@ var EC = require('elliptic').ec;
 const ec = new EC('secp256k1'); 
 const Transaction = require('./Transaction');
 
+/*
+
+Wallet Class
+
+This class creates a users public and private key pair.
+It also takes care of signing transactions as well as creating
+transactions on behalf of the users. The functions are:
+    sign() and
+    createTransaction()
+
+which are self explanatory. 
+
+*/
+
 class Wallet {
     constructor() {
         this.key = ec.genKeyPair();
@@ -12,14 +26,6 @@ class Wallet {
     sign(hash) {
         const sig = this.key.sign(hash);
         return sig.toDER('hex');
-    }
-
-    getTransactionHistory() { 
-        // Traverse Blockchain
-
-        // Output current coins
-
-        // store temp variable JSON {timestamp, block, fundsAtTime}
     }
 
     createTransaction(receiverID, amount, node, blockchain) {

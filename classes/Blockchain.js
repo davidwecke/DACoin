@@ -1,11 +1,40 @@
 const Block = require('./Block');
 const Transaction = require('./Transaction');
 
+/*
+
+Blockchain Class
+
+The main class of the project, the blockchain. This class holds a chain of blocks
+which hold the transactions of users. Blocks are added to the chain using the:
+
+    addBlock()
+
+function, which checks the hash that the miners came up with and then adds it.
+
+Every time a block is added to the chain, the:
+    
+    checkMiningReward()
+
+function is called, which checks whether or not it is time to half
+the current mining reward. This can be adjusted in this function and 
+is very low in our small proof of concept project. 
+
+The last major function is the:
+
+    verify()
+
+function, which goes through the entire blockchain and calculates all the hashes to
+see if the blockchain is valid. 
+
+*/
+
+
 class Blockchain {
     constructor(creatorAddress) {
         this.blockchain = [];
         this.miningReward = 100;
-        // Create genesis block
+        this.difficulty = 3;
         this.createGenesisBlock(creatorAddress);
     }
 
@@ -44,19 +73,17 @@ class Blockchain {
         }
     }
 
-    // Add a block to the blockchain
-    addBlock(block, miningRewardAddress) {
+    addBlock(block) {
         // Pass the verify function the blockchain
         if (block.verify(this.getHeadHash())) {
-            // Valid block, add it
-            console.log('Successfully added a block!');
+            // Valid block, add it. 
             this.blockchain.push(block);
             this.checkMiningReward();
         }
     }
 
     checkMiningReward() {
-        if(this.blockchain.length % 2 === 0) {
+        if(this.blockchain.length % 3 === 0) {
             this.miningReward = this.miningReward/2;
         }
     }

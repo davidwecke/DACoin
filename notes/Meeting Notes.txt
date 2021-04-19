@@ -140,3 +140,29 @@ Next Meeting
     - Prettify output for screenshots
     - Generate sufficiently large test case for screenshots
     - Cleanup code for submission
+
+14/04/2021
+
+To-do List:
+    - Screenshots
+        - CA Class
+        - Output 
+    - Pseudocode for the paper (https://www.overleaf.com/learn/latex/algorithms)
+        - Central Authority Screenshots
+        - General Blockchain algorithms
+        - Difficult and payout
+        - Elliptical Curve Cryptography and Wallets
+        - BLAKE3 instead of SHA256
+        - Class Relation Diagram(flow.io)
+
+David Solo work 19/04/2021
+
+What we did:
+    - Removed unnecesary code
+        - Unnused statements
+        - Console.logs
+    - Added Class descriptions
+    - Required a signature for CA signup(this was necessary)
+    
+
+

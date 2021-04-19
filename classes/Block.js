@@ -1,6 +1,31 @@
 const blake3 = require('blake3');
 const Transaction = require('./Transaction');
 
+/*
+
+Block Class
+
+This class is a container for transactions which is linked together
+to form the block chain. 
+
+It contains 2 main functions:
+    addTransactionsFromNode()
+        This function grabs all available ready transactions that
+        users have posted to the Node and sets them into a temp array.
+
+    mineBlock()
+        This function checks the validity of all transactions by
+        comparing the senders address with the signature, as well as 
+        checking if there are enough funds in the senders wallet to perform
+        the transaction.
+
+        After verifying the transactions, the function will calculate hashes until
+        one is found with the associated difficulty.
+
+        Once the hash is found, the block is ready to be added to the blockchain.
+
+*/
+
 class Block{
     constructor(previousHash){
         this.previousHash = previousHash;
@@ -8,7 +33,7 @@ class Block{
         this.tempTransactionList = [];
         this.nonce = 0;
         this.date = Date.now();
-        this.difficulty = 5;
+        this.difficulty = 3;
         this.hash = '';
     }
 
@@ -23,18 +48,20 @@ class Block{
     }
 
     mineBlock(rewardAddress, blockchain){
-        // Go through each transaction
-        //      - Verify the transaction(sig matches senderID/publicKey)
-        //      - If verified, keep tally of available coins and add transact to the transactList
+        // Started to mine output message.
+        console.log('Started to mine block ' + blockchain.blockchain.length + ' ...');
 
+        // Temp counter to find available funds for each user. 
         let tally = new Map();
         
+        // For loop iterating over all temp transactions, to verify them and add up the tally of funds. 
         this.tempTransactionList.forEach(function(transaction, index, array){
             if(transaction.verifyTransaction() || transaction.verifyCA()) {
                 if(tally.has(transaction.senderID)) {
                     // This is not a users first transaction
                     if(tally.get(transaction.senderID) < transaction.amount) {
                         // Not enough funds, reject
+                        console.log('Transaction denied due to insufficient funds');
                     } else {
                         // Enough funds, update tally and push transaction
                         tally.set(transaction.senderID, tally.get(transaction.senderID) - transaction.amount);
@@ -45,7 +72,6 @@ class Block{
                     let userAvailableCoins = blockchain.getAvailableCoins(transaction.senderID);
                     if(userAvailableCoins < transaction.amount) {
                         // Not enough funds, reject
-
                     } else {
                         // Enough funds on first transaction so
                         this.transactionList.push(transaction);
@@ -58,27 +84,29 @@ class Block{
             }
         }, this);
 
-        // Add Mining reward transaction
+        // After adding all legitimate transactions, add mining reward transaction for the miner. 
         this.transactionList.push(new Transaction('System Mining Reward', rewardAddress, blockchain.miningReward));
         
-        // Mine hash
+        // 'Mine' hash
         do {
             this.nonce++;
             this.hash = this.calculateHash();
             //console.log(this.hash);
-        } while(this.hash.slice(-this.difficulty) != Array(this.difficulty+1).join("1"));
+        } while(this.hash.slice(-blockchain.difficulty) != Array(blockchain.difficulty+1).join("1"));
 
+        // Success mined message. 
         console.log('Successfully mined a block with hash: ' + this.hash + ' and nonce: ' + this.nonce);
     }
 
+    // Debug function for output verification of certain variables. 
     getDebugString() {
         return this.previousHash + ' ' + this.transactionList.length + ' ' + this.date + ' ' + this.nonce;
     }
 
+    // Check that the hash set in the block matches what the calculations say.
+    // The use case of this function is for transactions that were modified after
+    // the hash was initially calculated. 
     verify() {
-        console.log('This.hash: ' + this.hash);
-        console.log('This.calculateHash: ' + this.calculateHash()) ;
-
         if(this.hash !== this.calculateHash()){
             // Wrong hash calculated found
             console.log('Wrong calculated hash found!');
