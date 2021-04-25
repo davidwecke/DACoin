@@ -27,7 +27,7 @@ david.wallet.createTransaction(alex.wallet.publicKey, 10, DACoinNode, DACoin);
 alex.wallet.createTransaction(david.wallet.publicKey, 5, DACoinNode, DACoin);
 
 DACoinCA.requestTransfer(alex.userID, '123-45-6789', david.userID);
-DACoinCA.registerUser(alex.userID, '123-45-6789', david.wallet.sign('123-45-6789'));
+DACoinCA.registerUser(alex.userID, '123-45-6789', alex.wallet.sign('123-45-6789'));
 DACoinCA.requestTransfer(alex.userID, '123-45-6789', david.userID);
 
 console.log(DACoinNode.pendingCATransactions[0]);
